@@ -15,18 +15,24 @@ export default function App() {
   const [repositories, setRepositories] = useState([]);
 
   useEffect(() => {
-    api.get("repositories").then((response) => {
+    api.get("repositories").then(response => {
       setRepositories(response.data);
     });
   }, []);
 
   async function handleLikeRepository(id) {
     // Implement "Like Repository" functionality
-    api.post(`repositories/${id}/like`).then((response) => {
-      api.get("repositories").then((response) => {
-        setRepositories(response.data);
-      });
+    const response = await api.post(`repositories/${id}/like`);
+    const likes = response.data.likes;
+
+    const updatedRepo = repositories.map(repo => {
+      if (repo.id === id) {
+        return { ...repo, likes };
+      } else {
+        return repo;
+      }
     });
+    setRepositories(updatedRepo);
   }
 
   return (
@@ -36,13 +42,13 @@ export default function App() {
         <FlatList
           style={styles.repositoryContainer}
           data={repositories}
-          keyExtractor={(repository) => repository.id}
+          keyExtractor={repository => repository.id}
           renderItem={({ item: repository }) => (
             <>
               <Text style={styles.repository}>{repository.title}</Text>
               <View style={styles.techsContainer}>
-                {repository.techs.split(",").map((tech) => (
-                  <Text key={`${repository.id}-${tech}`} style={styles.tech}>
+                {repository.techs.map(tech => (
+                  <Text key={tech} style={styles.tech}>
                     {tech}
                   </Text>
                 ))}
